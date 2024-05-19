@@ -65,7 +65,7 @@ class servidor:
     def enviarArquivo(self, arquivo, conn):
         caminho = os.path.join(self.diretorio, arquivo.decode())   
         try:     
-            with open(caminho, 'rb') as arq:
+            with open(caminho, 'r') as arq:
                 texto = arq.read()      
 
                 # envia o tamanho do arquivo      
