@@ -1,17 +1,21 @@
-import socket, sys, select
+import socket, sys, select, os, time
 
 class cliente:
     def __init__(self, ip, porta):
-        self.ip = ip
-        self.porta = porta
-        self.conexao = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.addr = (ip, porta)
+        self.conexao = socket.socket()
         self.arquivos = []
+        self.diretorio = './data'
+
+        if not os.path.exists(self.diretorio):
+            os.makedirs(self.diretorio)                
+
         self.conectar()
-        self.run()
-        
+        self.run()   
         
     def conectar(self):
-        self.conexao.connect((self.ip, self.porta))
+        self.conexao.connect(self.addr)
+        print('Conectado ao servidor {} na porta {}'.format(self.addr[0], self.addr[1]))
         
     def enviarMensagem(self, mensagem):
         self.conexao.send(mensagem.encode())
@@ -24,15 +28,22 @@ class cliente:
         return self.receberMensagem()
     
     def receberArquivo(self, arquivo):
-        with open(arquivo, 'wb') as f:
-            while True:
-                data = self.conexao.recv(1024)
-                if not data:
-                    break
-                f.write(data)
-                
-        print('Arquivo recebido com sucesso')
-        self.enviarMensagem('Arquivo enviado com sucesso')
+        # recebendo o tamanho do arquivo
+        tam = int(self.receberMensagem().decode())
+
+        # recebendo dados do arquivo
+        dados = self.receberMensagem().decode()
+
+        # salvando arquivo
+        url = '{}/{}'.format(self.diretorio, arquivo)
+        try:
+            with open(url, 'wb') as f:
+                f.write(dados)
+                print('Arquivo {} baixado com sucesso'.format(arquivo))
+                return 'OK'
+        except:
+            print('Erro ao baixar arquivo')
+            return 'ERRO'        
     
     def listarArquivos(self):
         self.enviarMensagem('LISTAR')
@@ -50,33 +61,38 @@ class cliente:
             
             for io in ready_to_read:
                 # se tivermos recebido uma mensagem
-                if io is self.conexao:
-                    data = self.receberMensagem()
-                    print('{}'.format(data.decode()))
-                
+                if io is self.conexao:   
+
+                    msg = self.receberMensagem()
+
+                    if not msg:
+                        print('Desconectado do servidor')
+                        sys.exit()
+
+                    elif msg.decode() in ['MENU', 'LISTAR', 'PEERS']:
+                        exibir = self.receberMensagem().decode()
+                        print('{}'.format(exibir))                        
+
+                    elif msg.decode() == 'BAIXAR':
+                        exibir = self.receberMensagem().decode()
+                        print('{}'.format(exibir))
+                        
+                        arquivo = input()
+                        self.enviarMensagem(arquivo)                                            
+
+                        status = self.receberArquivo(arquivo)
+                        self.enviarMensagem(status) 
+                        
+                    elif msg.decode() == 'DESCONECTAR':
+                        print('Desconectando do servidor ...')
+                        self.enviarMensagem('OK')
+                        self.fechar()
+                        sys.exit()
+
                 else:
                     # enviar informacao
-                    arquivo = input()
-                    self.enviarMensagem(arquivo)
-                    
-                    # receber informacao
-                    data = self.receberMensagem()
-                    
-                    # se o arquivo nao for encontrado
-                    if data == 'Arquivo não encontrado':
-                        print('Arquivo não encontrado')
-                        continue
-                    else:
-                        print('Arquivo encontrado')
-                        self.receberArquivo(arquivo)
-                        continue
-                            
-                    
-                    
-            
-            
-            
-            
+                    resp = input()
+                    self.enviarMensagem(resp)  
+                    sys.stdout.flush()
 
-cliente = cliente('192.168.0.5', 1234)
-cliente.run()
+cliente('192.168.0.5', 1234)
