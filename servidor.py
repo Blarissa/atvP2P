@@ -7,7 +7,7 @@ class servidor:
         self.peers = []
         self.diretorio = 'data'        
         self.arquivos = self.retornaArquivos() 
-        self.conectar()           
+        self.conectar()               
         
     def conectar(self):        
         # reutilizar endereco logo a seguir a fechar o servidor
@@ -25,7 +25,7 @@ class servidor:
             conn, addr = self.aceitarConexao()
             
             print('Conectado com {}'.format(addr))            
-            self.enviarMensagem('Bem vindo {}'.format(addr), conn)
+            #self.enviarMensagem('Bem vindo {}'.format(addr), conn)
             
             # adiciona o novo socket a lista de conexoes
             self.adicionarPeer(conn)
@@ -65,11 +65,15 @@ class servidor:
     def enviarArquivo(self, arquivo, conn):   
         try:     
             with open(arquivo.decode(), 'rb') as arq:
-                texto = arq.read()            
-                self.enviarMensagem(len(texto), conn)     
-                self.enviarMensagem(texto, conn)                      
+                texto = arq.read()      
+
+                # envia o tamanho do arquivo      
+                self.enviarMensagem(len(texto), conn) 
+                # envia conteudo do arquivo    
+                self.enviarMensagem(texto, conn)   
+                print('Arquivo {} enviado com sucesso'.format(arquivo.decode()))
         except:
-            return 'ERRO'            
+            print('Erro ao enviar arquivo')
     
     def listarArquivos(self, conn):       
         arquivos = ', '.join([arquivo[0] for arquivo in self.arquivos])
@@ -78,43 +82,61 @@ class servidor:
     def fechar(self):
         self.conexao.close()
         
-    def run(self, conn, addr):   
-        while True:     
-            self.exibeMenu(conn)        
-            opt = self.esperaMensagem(conn, addr)        
+    def run(self, conn, addr): 
+        while True:                 
+            # exibe o menu
+            self.enviarMensagem('MENU', conn)
+            time.sleep(1)
+            self.exibeMenu(conn)    
+                        
+            while True:
+                opt = conn.recv(1024)
                 
-            # se a opcao for 1, listar arquivos
-            if opt.decode() == '1':
-                self.listarArquivos(conn)                
-            
-            # se a opcao for 2, enviar arquivo
-            elif opt.decode() == '2':
-                self.enviarMensagem('BAIXAR', conn)
-                self.enviarMensagem('Digite o nome do arquivo: ', conn)                
-                arquivo = self.esperaMensagem(conn, addr)                
+                # se a opcao for 1, listar arquivos
+                if opt.decode() == '1':
+                    self.enviarMensagem('LISTAR', conn)
+                    time.sleep(1)
+                    self.listarArquivos(conn)                
                 
-                self.enviarArquivo(arquivo, conn)
-                status = self.esperaMensagem(conn, addr).decode()
-                
-                if status == 'OK':
-                    self.arquivos[arquivo.decode()] = addr
-                    print('Arquivo baixado com sucesso')
+                # se a opcao for 2, enviar arquivo
+                elif opt.decode() == '2':
+                    self.enviarMensagem('BAIXAR', conn)
+                    time.sleep(1)
+                    self.enviarMensagem('Digite o nome do arquivo: ', conn)                
+                    arquivo = self.esperaMensagem(conn, addr)                
                     
-                else:
-                    print('Erro ao baixar arquivo')                                                                      
-            
-            # se a opcao for 3, sair   
-            elif opt.decode() == '3':
-                self.enviarMensagem('DESCONECTAR', conn)
-                status = self.esperaMensagem(conn, addr).decode()
-                print(status)  
+                    self.enviarArquivo(arquivo, conn)
+                    status = self.esperaMensagem(conn, addr).decode()
+                    
+                    if status == 'OK':
+                        # altera o endereco do arquivo para o endereco do cliente
+                        self.arquivos[arquivo.decode()] = addr                    
+                        print('Arquivo {} baixado por {} com sucesso'.format(arquivo.decode(), addr))                   
+                    else:
+                        print('Peer {} não conseguir baixar o arquivo {}'.format(addr, arquivo.decode()))                                                                      
                 
-            elif opt.decode() == '4':
-                self.enviarMensagem('Peers: ' + ', '.join(self.peers), conn)
-                
-            elif opt.decode() == '5':
-                self.enviarMensagem('DESCONECTAR', conn)   
+                # se a opcao for 3, sair   
+                elif opt.decode() == '3':
+                    self.enviarMensagem('DESCONECTAR', conn)
+                    status = self.esperaMensagem(conn, addr).decode()
+                    
+                    if status == 'OK':
+                        print('Desconectando do peer {}'.format(addr))
+                        self.peers.remove(conn)                                    
+                    
+                elif opt.decode() == '4':
+                    self.enviarMensagem('PEERS', conn)
+                    time.sleep(1)
+                    self.enviarMensagem('Peers: ' + ', '.join(self.peers), conn)
+                    
+                elif opt.decode() == '5':
+                    self.enviarMensagem('DESCONECTAR', conn)   
 
+                else:
+                    self.enviarMensagem('Opção inválida', conn)
+            # aguarda a opcao do cliente    
+            #opt = self.esperaMensagem(conn, addr)        
+            
                 
     def exibeMenu(self, conn):
         msg = ('\nSelecione uma opção' +
