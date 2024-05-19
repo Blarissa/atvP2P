@@ -33,11 +33,11 @@ class cliente:
 
         # recebendo dados do arquivo
         dados = self.receberMensagem().decode()
-
+        #criando arquivo
         # salvando arquivo
         url = '{}/{}'.format(self.diretorio, arquivo)
         try:
-            with open(url, 'wb') as f:
+            with open(url, 'w') as f:
                 f.write(dados)
                 print('Arquivo {} baixado com sucesso'.format(arquivo))
                 return 'OK'

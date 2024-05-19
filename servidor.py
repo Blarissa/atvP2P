@@ -62,15 +62,17 @@ class servidor:
             
             return data
     
-    def enviarArquivo(self, arquivo, conn):   
+    def enviarArquivo(self, arquivo, conn):
+        caminho = os.path.join(self.diretorio, arquivo.decode())   
         try:     
-            with open(arquivo.decode(), 'rb') as arq:
+            with open(caminho, 'rb') as arq:
                 texto = arq.read()      
 
                 # envia o tamanho do arquivo      
-                self.enviarMensagem(len(texto), conn) 
+                self.enviarMensagem(str(len(texto)), conn)
+                time.sleep(1) 
                 # envia conteudo do arquivo    
-                self.enviarMensagem(texto, conn)   
+                self.enviarMensagem(str(texto), conn)   
                 print('Arquivo {} enviado com sucesso'.format(arquivo.decode()))
         except:
             print('Erro ao enviar arquivo')
