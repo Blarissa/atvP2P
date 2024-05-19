@@ -28,7 +28,7 @@ class servidor:
             #self.enviarMensagem('Bem vindo {}'.format(addr), conn)
             
             # adiciona o novo socket a lista de conexoes
-            self.adicionarPeer(conn)
+            self.adicionarPeer(addr)
             
             # cria uma thread para lidar com a nova conexão
             threading.Thread(target=self.run, args=(conn, addr)).start()
@@ -43,8 +43,8 @@ class servidor:
             
         return self.arquivos               
     
-    def adicionarPeer(self, conn):
-        self.peers.append(conn)
+    def adicionarPeer(self, addr):
+        self.peers.append(addr)
     
     def enviarMensagem(self, mensagem, conn):
         conn.send(mensagem.encode())
@@ -57,7 +57,7 @@ class servidor:
             # se o cliente tiver desligado
             if not data:
                 print('Desconectado de {}'.format(addr))
-                self.peers.remove(conn)
+                self.peers.remove(addr)
                 break
             
             return data
@@ -91,7 +91,7 @@ class servidor:
                         
             while True:
                 opt = conn.recv(1024)
-                
+
                 # se a opcao for 1, listar arquivos
                 if opt.decode() == '1':
                     self.enviarMensagem('LISTAR', conn)
@@ -127,7 +127,9 @@ class servidor:
                 elif opt.decode() == '4':
                     self.enviarMensagem('PEERS', conn)
                     time.sleep(1)
-                    self.enviarMensagem('Peers: ' + ', '.join(self.peers), conn)
+                    
+                    peers = ', '.join([str(peer) for peer in self.peers])
+                    self.enviarMensagem(peers, conn)
                     
                 elif opt.decode() == '5':
                     self.enviarMensagem('DESCONECTAR', conn)   
