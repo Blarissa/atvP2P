@@ -62,7 +62,6 @@ class cliente:
             for io in ready_to_read:
                 # se tivermos recebido uma mensagem
                 if io is self.conexao:   
-
                     msg = self.receberMensagem()
 
                     if not msg:

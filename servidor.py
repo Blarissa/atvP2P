@@ -91,64 +91,60 @@ class servidor:
             time.sleep(1)
             self.exibeMenu(conn)    
                         
-            while True:
-                opt = conn.recv(1024)
+            opt = conn.recv(1024)
 
-                # se a opcao for 1, listar arquivos
-                if opt.decode() == '1':
-                    self.enviarMensagem('LISTAR', conn)
-                    time.sleep(1)
-                    self.listarArquivos(conn)                
-                
-                # se a opcao for 2, enviar arquivo
-                elif opt.decode() == '2':
-                    self.enviarMensagem('BAIXAR', conn)
-                    time.sleep(1)
-                    self.enviarMensagem('Digite o nome do arquivo: ', conn)                
-                    arquivo = self.esperaMensagem(conn, addr)                
-                    
-                    self.enviarArquivo(arquivo, conn)
-                    status = self.esperaMensagem(conn, addr).decode()
-                    
-                    if status == 'OK':
-                        # altera o endereco do arquivo para o endereco do cliente
-                        for arq in self.arquivos:
-                            if arq[0] == arquivo.decode():
-                                arq = (arq[0], addr)
-                        
-                        print('Arquivo {} baixado por {} com sucesso'.format(arquivo.decode(), addr))                   
-                    else:
-                        print('Peer {} não conseguir baixar o arquivo {}'.format(addr, arquivo.decode()))                                                                      
-                
-                # se a opcao for 3, sair   
-                elif opt.decode() == '3':
-                    self.enviarMensagem('DESCONECTAR', conn)
-                    status = self.esperaMensagem(conn, addr).decode()
-                    
-                    if status == 'OK':
-                        print('Desconectando do peer {}'.format(addr))
-                        self.peers.remove(conn)                                    
-                    
-                elif opt.decode() == '4':
-                    self.enviarMensagem('PEERS', conn)
-                    time.sleep(1)
-                    
-                    peers = ', '.join([str(peer) for peer in self.peers])
-                    self.enviarMensagem(peers, conn)
-                    
-                elif opt.decode() == '5':
-                    self.enviarMensagem('DESCONECTAR', conn)   
-                    status = self.esperaMensagem(conn, addr).decode()
-                    if status == 'OK':
-                        print('Desconectando do peer {}'.format(addr))
-                        self.peers.remove(conn)  
-                        break
-
-                else:
-                    self.enviarMensagem('Opção inválida', conn)
-            # aguarda a opcao do cliente    
-            #opt = self.esperaMensagem(conn, addr)        
+            # se a opcao for 1, listar arquivos
+            if opt.decode() == '1':
+                self.enviarMensagem('LISTAR', conn)
+                time.sleep(1)
+                self.listarArquivos(conn)                
             
+            # se a opcao for 2, enviar arquivo
+            elif opt.decode() == '2':
+                self.enviarMensagem('BAIXAR', conn)
+                time.sleep(1)
+                self.enviarMensagem('Digite o nome do arquivo: ', conn)                
+                arquivo = self.esperaMensagem(conn, addr)                
+                
+                self.enviarArquivo(arquivo, conn)
+                status = self.esperaMensagem(conn, addr).decode()
+                
+                if status == 'OK':
+                    # altera o endereco do arquivo para o endereco do cliente
+                    for arq in self.arquivos:
+                        if arq[0] == arquivo.decode():
+                            arq = (arq[0], addr)
+                    
+                    print('Arquivo {} baixado por {} com sucesso'.format(arquivo.decode(), addr))                   
+                else:
+                    print('Peer {} não conseguir baixar o arquivo {}'.format(addr, arquivo.decode()))                                                                      
+            
+            # se a opcao for 3, sair   
+            elif opt.decode() == '3':
+                self.enviarMensagem('DESCONECTAR', conn)
+                status = self.esperaMensagem(conn, addr).decode()
+                
+                if status == 'OK':
+                    print('Desconectando do peer {}'.format(addr))
+                    self.peers.remove(addr)                                    
+                
+            elif opt.decode() == '4':
+                self.enviarMensagem('PEERS', conn)
+                time.sleep(1)
+                
+                peers = ', '.join([str(peer) for peer in self.peers])
+                self.enviarMensagem(peers, conn)
+                
+            elif opt.decode() == '5':
+                self.enviarMensagem('DESCONECTAR', conn)   
+                status = self.esperaMensagem(conn, addr).decode()
+                if status == 'OK':
+                    print('Desconectando do peer {}'.format(addr))
+                    self.peers.remove(addr)  
+                    break
+
+            else:
+                self.enviarMensagem('Opção inválida', conn)            
                 
     def exibeMenu(self, conn):
         msg = ('\nSelecione uma opção' +
