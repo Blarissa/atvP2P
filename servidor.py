@@ -112,7 +112,10 @@ class servidor:
                     
                     if status == 'OK':
                         # altera o endereco do arquivo para o endereco do cliente
-                        self.arquivos[arquivo.decode()] = addr                    
+                        for arq in self.arquivos:
+                            if arq[0] == arquivo.decode():
+                                arq = (arq[0], addr)
+                        
                         print('Arquivo {} baixado por {} com sucesso'.format(arquivo.decode(), addr))                   
                     else:
                         print('Peer {} não conseguir baixar o arquivo {}'.format(addr, arquivo.decode()))                                                                      
@@ -135,6 +138,11 @@ class servidor:
                     
                 elif opt.decode() == '5':
                     self.enviarMensagem('DESCONECTAR', conn)   
+                    status = self.esperaMensagem(conn, addr).decode()
+                    if status == 'OK':
+                        print('Desconectando do peer {}'.format(addr))
+                        self.peers.remove(conn)  
+                        break
 
                 else:
                     self.enviarMensagem('Opção inválida', conn)
