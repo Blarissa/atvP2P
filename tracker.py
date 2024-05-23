@@ -1,18 +1,17 @@
 from socket import *
-serverPort = 12000
-serverSocket = socket(AF_INET,SOCK_STREAM) #welcoming socket
-serverSocket.bind(('192.168.100.76',serverPort))
-#serverSocket.listen(2)
-print('The server is ready to receive')
+import json 
 
 tracking = {}
 
+serverPort = 12000
+serverSocket = socket(AF_INET,SOCK_STREAM) #welcoming socket
+serverSocket.bind(('192.168.100.76',serverPort))
+print('The server is ready to receive')
+
 while True:
-    serverSocket.listen(2)
+    serverSocket.listen(5)
     connectionSocket, addr = serverSocket.accept()
     opcode = connectionSocket.recv(1024).decode()
-
-    print(tracking)
 
     address = addr[0]
     if(opcode == 'a'):
@@ -24,5 +23,8 @@ while True:
         nome_arquivo = connectionSocket.recv(1024).decode()
         tracking.setdefault(address, []).append(nome_arquivo) #adiciona arquivo no dict
         connectionSocket.send(nome_arquivo.encode())
+        connectionSocket.close()
+    if(opcode == 'c'):
+        connectionSocket.send((json.dumps(tracking)).encode())
         connectionSocket.close()
             
