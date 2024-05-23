@@ -1,4 +1,5 @@
 from socket import *
+import json
 serverName = '192.168.100.76'
 serverPort = 12000
 
@@ -10,7 +11,7 @@ def createAndConnect(serverName,serverPort):
 menu = ('\nSelecione uma opção' +
         '\na - Registrar-se como peer' +
         '\nb - Registrar arquivo' +
-        '\nc - Baixar arquivo' +
+        '\nc - Listar arquivos' +
         '\nd - Sair\n')
 
 while True:
@@ -20,13 +21,16 @@ while True:
     clientSocket.send(opcode.encode())
     if (opcode == 'a'):
         myip = clientSocket.recv(1024)
-        print('\nip: ', myip.decode())
+        print(f'\nip: {myip.decode()} registrado.')
         clientSocket.close()
     if (opcode == 'b'):
         nome_arquivo = input("Nome do Arquivo: ")
         clientSocket.send(nome_arquivo.encode())
         arquivo = clientSocket.recv(1024)
-        print('\narquivo:', arquivo.decode())
+        print(f'\narquivo {arquivo.decode()} registrado.')
         clientSocket.close()
+    if (opcode == 'c'):
+        arquivos = json.loads(clientSocket.recv(1024))
+        print(f'\narquivos: {arquivos}')
     if(opcode == 'd'):
         break
