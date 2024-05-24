@@ -17,14 +17,24 @@ while True:
     if(opcode == 'a'):
         connectionSocket.send(address.encode())
         if address not in tracking:
-            tracking.update({address: []})  #adiciona peer no dict
+            tracking.update({address: []})  
         connectionSocket.close()
     if(opcode == 'b'):
         nome_arquivo = connectionSocket.recv(1024).decode()
-        tracking.setdefault(address, []).append(nome_arquivo) #adiciona arquivo no dict
+        tracking.setdefault(address, []).append(nome_arquivo)
         connectionSocket.send(nome_arquivo.encode())
         connectionSocket.close()
     if(opcode == 'c'):
         connectionSocket.send((json.dumps(tracking)).encode())
         connectionSocket.close()
+    if(opcode == 'd'):
+        nome_arquivo = connectionSocket.recv(1024).decode()
+        for ip in tracking.keys():
+            for arquivos in tracking.get(ip):
+                if nome_arquivo in arquivos:
+                    connectionSocket.send(json.dumps(ip).encode())
+                else: 
+                    connectionSocket.send(json.dumps("404").encode())
+
             
+
