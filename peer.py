@@ -12,7 +12,8 @@ menu = ('\nSelecione uma opção' +
         '\na - Registrar-se como peer' +
         '\nb - Registrar arquivo' +
         '\nc - Listar arquivos' +
-        '\nd - Sair\n')
+        '\nd - Baixar arquivo' +
+        '\ne - Sair\n')
 
 while True:
     print(menu)
@@ -33,4 +34,13 @@ while True:
         arquivos = json.loads(clientSocket.recv(1024))
         print(f'\narquivos: {arquivos}')
     if(opcode == 'd'):
+        nome_arquivo = input("Nome do Arquivo: ")
+        clientSocket.send(nome_arquivo.encode())
+        answer = json.loads(clientSocket.recv(1024))
+        if (answer == "404"):
+            print(f'\narquivo não encontrado.')
+        else:
+            print(f'\narquivo encontrado no ip {answer}')
+        clientSocket.close()
+    if(opcode == 'e'):
         break
