@@ -1,53 +1,79 @@
-from socket import *
+import socket
 import json
-serverName = '192.168.100.76'
-serverPort = 12000
 
-def createAndConnect(serverName,serverPort):
-    clientSocket = socket(AF_INET, SOCK_STREAM)
-    clientSocket.connect((serverName,serverPort))
-    return clientSocket
+SERVER_NAME = '192.168.100.76'
+SERVER_PORT = 12000
 
-menu = ('\na - Registrar-se como peer' +
-        '\nb - Registrar arquivo' +
-        '\nc - Listar arquivos' +
-        '\nd - Baixar arquivo' +
+def create_and_connect(server_name, server_port):
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((server_name, server_port))
+    return client_socket
+
+def register_peer(client_socket):
+    myip = client_socket.recv(1024)
+    print(f'\nIP: {myip.decode()} registrado.')
+
+def register_file(client_socket):
+    nome_arquivo = input("Nome do Arquivo: ")
+    client_socket.send(json.dumps(nome_arquivo).encode())
+    arquivo = json.loads(client_socket.recv(1024).decode())
+    if arquivo == "403":
+        print('\nPeer não registrado na rede')
+    else:
+        print(f'\nArquivo {arquivo} registrado.')
+
+def list_files(client_socket):
+    arquivos = json.loads(client_socket.recv(1024).decode())
+    print(f'\nArquivos: {arquivos}')
+
+def download_file(client_socket):
+    nome_arquivo = input("Nome do Arquivo: ")
+    client_socket.send(json.dumps(nome_arquivo).encode())
+    answer = json.loads(client_socket.recv(1024).decode())
+    if answer == "404":
+        print('\nArquivo não encontrado.')
+    else:
+        print(f'\nArquivo encontrado no IP {answer}')
+
+def leave_network():
+    print('\nSaiu da rede.')
+
+def main():
+    menu = (
+        '\na - Registrar-se como peer'
+        '\nb - Registrar arquivo'
+        '\nc - Listar arquivos'
+        '\nd - Baixar arquivo'
         '\ne - Sair da rede'
-        '\nf - Sair\n')
+        '\nf - Sair\n'
+    )
 
-while True:
-    print(menu)
-    opcode = input()
-    clientSocket = createAndConnect(serverName,serverPort)
-    clientSocket.send(opcode.encode())
-    if (opcode == 'a'):
-        myip = clientSocket.recv(1024)
-        print(f'\nip: {myip.decode()} registrado.')
-        clientSocket.close()
-    if (opcode == 'b'):
-        nome_arquivo = input("Nome do Arquivo: ")
-        clientSocket.send(json.dumps(nome_arquivo).encode())
-        arquivo = json.loads(clientSocket.recv(1024))
-        if (arquivo == "403"):
-            print(f'\npeer não registrado na rede')
-            clientSocket.close()
-        else:
-            print(f'\narquivo {arquivo} registrado.')
-            clientSocket.close()
-    if (opcode == 'c'):
-        arquivos = json.loads(clientSocket.recv(1024))
-        print(f'\narquivos: {arquivos}')
-    if(opcode == 'd'):
-        nome_arquivo = input("Nome do Arquivo: ")
-        clientSocket.send(json.dumps(nome_arquivo).encode())
-        answer = json.loads(clientSocket.recv(1024).decode())
-        if (answer == "404"):
-            print(f'\narquivo não encontrado.')
-        else:
-            print(f'\narquivo encontrado no ip {answer}')
-        clientSocket.close()
-    if(opcode == 'e'):
-        print(f'\nsaiu da rede.')
-        clientSocket.close()
-    if(opcode == 'f'):
-        break
+    while True:
+        print(menu)
+        opcode = input()
+        client_socket = create_and_connect(SERVER_NAME, SERVER_PORT)
+
+        try:
+            client_socket.send(opcode.encode())
+
+            if opcode == 'a':
+                register_peer(client_socket)
+            elif opcode == 'b':
+                register_file(client_socket)
+            elif opcode == 'c':
+                list_files(client_socket)
+            elif opcode == 'd':
+                download_file(client_socket)
+            elif opcode == 'e':
+                leave_network()
+            elif opcode == 'f':
+                break
+            else:
+                print('\nOpção inválida.')
+        except Exception as e:
+            print(f'Erro: {e}')
+        finally:
+            client_socket.close()
+
+if __name__ == "__main__":
+    main()
