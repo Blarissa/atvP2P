@@ -1,8 +1,12 @@
 import socket
 import json
+import threading
+from time import sleep
 
-SERVER_NAME = '192.168.100.76'
+SERVER_NAME = '192.168.100.3'
 SERVER_PORT = 12000
+
+stop_event = threading.Event()
 
 def create_and_connect(server_name, server_port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,6 +42,7 @@ def download_file(client_socket):
 def leave_network():
     print('\nSaiu da rede.')
 
+
 def main():
     menu = (
         '\na - Registrar-se como peer'
@@ -47,6 +52,7 @@ def main():
         '\ne - Sair da rede'
         '\nf - Sair\n'
     )
+
 
     while True:
         print(menu)
@@ -67,13 +73,21 @@ def main():
             elif opcode == 'e':
                 leave_network()
             elif opcode == 'f':
+                stop_event.set()
                 break
             else:
                 print('\nOpção inválida.')
         except Exception as e:
-            print(f'Erro: {e}')
+            print(f'Error: {e}')
         finally:
             client_socket.close()
 
+def test_thread():
+    while not stop_event.is_set():
+        pass
+
 if __name__ == "__main__":
+    thread = threading.Thread(target=test_thread, args=())
+    thread.start()
     main()
+    thread.join()

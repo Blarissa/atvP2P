@@ -5,7 +5,7 @@ tracking = {} # dicionário de peers(keys) e seus arquivos(values)
 
 serverPort = 12000
 serverSocket = socket(AF_INET,SOCK_STREAM) # welcoming socket
-serverSocket.bind(('192.168.100.76',serverPort))
+serverSocket.bind(('192.168.100.3',serverPort))
 print('The server is ready to receive')
 
 while True:
@@ -32,14 +32,14 @@ while True:
         connectionSocket.send((json.dumps(tracking)).encode())
         connectionSocket.close()
     if(opcode == 'd'): #baixar arquivo
-        notfound = True;
+        notfound = True
         nome_arquivo = json.loads(connectionSocket.recv(1024).decode())
         if(tracking): # if tracking is not empty
             for ip in tracking.keys():
                 for arquivos in tracking.get(ip):
                     if nome_arquivo in arquivos:
                         connectionSocket.send(json.dumps(ip).encode())
-                        notfound = False;
+                        notfound = False
         if (notfound):
             connectionSocket.send(json.dumps("404").encode())
         connectionSocket.close()
