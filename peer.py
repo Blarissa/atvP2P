@@ -109,7 +109,7 @@ def peer_seeding():
     print(f'{get_ip()} is ready to receive')
     while not stop_event.is_set():
         peerSocket.listen(5) # pode ter até 5 conexões pendentes
-        connectionSocket, addr = serverSocket.accept()
+        connectionSocket, addr = peerSocket.accept()
         nome_arquivo = connectionSocket.recv(1024).decode()
 
 if __name__ == "__main__":
