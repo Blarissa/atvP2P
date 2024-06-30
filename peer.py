@@ -111,6 +111,7 @@ def peer_seeding():
         peerSocket.listen(5) # pode ter até 5 conexões pendentes
         connectionSocket, addr = peerSocket.accept()
         nome_arquivo = connectionSocket.recv(1024).decode()
+        print(nome_arquivo)
 
 if __name__ == "__main__":
     thread = threading.Thread(target=peer_seeding, args=())
