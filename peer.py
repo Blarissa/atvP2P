@@ -7,6 +7,9 @@ import os
 SERVER_NAME = '192.168.100.10'
 SERVER_PORT = 12000
 
+PEER_PORT = 12001
+PEER_NAME = '192.168.100.10'
+
 arquivos = []
 diretorio = './data'
 
@@ -45,7 +48,7 @@ def download_file(client_socket):
         print('\nArquivo não encontrado.')
     else:
         print(f'\nArquivo encontrado no IP {answer}')
-        leechSocket = create_and_connect(12001,answer) # establish TCP connection with peer
+        leechSocket = create_and_connect(answer,PEER_PORT) # establish TCP connection with peer
         try:
             leechSocket.send(json.dumps(nome_arquivo).encode())
         except Exception as e:
@@ -105,7 +108,9 @@ def peer_seeding():
     peerSocket.bind((get_ip(),peerPort))
     print(f'{get_ip()} is ready to receive')
     while not stop_event.is_set():
-        pass
+        peerSocket.listen(5) # pode ter até 5 conexões pendentes
+        connectionSocket, addr = serverSocket.accept()
+        nome_arquivo = connectionSocket.recv(1024).decode()
 
 if __name__ == "__main__":
     thread = threading.Thread(target=peer_seeding, args=())
