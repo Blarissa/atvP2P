@@ -2,9 +2,16 @@
 from socket import *
 import json
 import threading
+import os
 
 SERVER_NAME = '192.168.100.10'
 SERVER_PORT = 12000
+
+arquivos = []
+diretorio = './data'
+
+if not os.path.exists(diretorio):
+    os.makedirs(diretorio)                
 
 stop_event = threading.Event()
 
@@ -38,6 +45,13 @@ def download_file(client_socket):
         print('\nArquivo não encontrado.')
     else:
         print(f'\nArquivo encontrado no IP {answer}')
+        leechSocket = create_and_connect(12001,answer) # establish TCP connection with peer
+        try:
+            leechSocket.send(json.dumps(nome_arquivo).encode())
+        except Exception as e:
+            print(f'Error: {e}')
+        finally:
+            leechSocket.close()
 
 def leave_network():
     print('\nSaiu da rede.')
@@ -80,11 +94,16 @@ def main():
         finally:
             client_socket.close()
 
+def get_ip():
+    machine_name = gethostname()
+    machine_address = gethostbyname(machine_name)
+    return machine_address
+
 def peer_seeding():
     peerSocket = socket(AF_INET,SOCK_STREAM) # welcoming socket
     peerPort = 12001
-    peerSocket.bind(('192.168.100.10',peerPort))
-    print(f'The Peer is ready to receive')
+    peerSocket.bind((get_ip(),peerPort))
+    print(f'{get_ip()} is ready to receive')
     while not stop_event.is_set():
         pass
 
