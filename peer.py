@@ -112,6 +112,7 @@ def peer_seeding():
         peerSocket.listen(5) # pode ter até 5 conexões pendentes
         peerConnectionSocket, addr = peerSocket.accept()
         nome_arquivo = peerConnectionSocket.recv(1024).decode()
+        nome_arquivo = nome_arquivo.strip('"')
         print(f'peer {addr} quer {nome_arquivo}')
         filepath = os.path.join('data', nome_arquivo)
         send_file(peerConnectionSocket,filepath)
