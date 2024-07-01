@@ -1,8 +1,6 @@
 #import socket
 from socket import *
-import json
-import threading
-import os
+import json, threading, os
 
 SERVER_NAME = '192.168.100.3'
 SERVER_PORT = 12000
@@ -105,16 +103,16 @@ def get_ip():
 def peer_seeding():
     peerSocket = socket(AF_INET,SOCK_STREAM) # welcoming socket
     peerSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    peerPort = 12001
-    peerSocket.bind((get_ip(),peerPort))
+    peerSocket.bind((get_ip(),PEER_PORT))
     while not stop_event.is_set():
         peerSocket.listen(5) # pode ter até 5 conexões pendentes
         peerConnectionSocket, addr = peerSocket.accept()
         nome_arquivo = peerConnectionSocket.recv(1024).decode()
         nome_arquivo = nome_arquivo.strip('"')
-        print(f'peer {addr} quer {nome_arquivo}\nenviando...\n')
+        print(f'peer {addr[0]} quer {nome_arquivo}\nenviando...')
         filepath = os.path.join(DATA_DIR, nome_arquivo)
         send_file(peerConnectionSocket,filepath)
+        print(f'arquivo enviado.\n')
 
 def send_file(sock, filename):
     file_size = os.path.getsize(filename)
@@ -128,7 +126,7 @@ def send_file(sock, filename):
 def receive_file(sock, save_directory):
     file_info = sock.recv(1024).decode()
     filename, file_size = file_info.split('|')
-    print(f'salvando {filename} de tamanho {file_size}...\n')
+    print(f'salvando {filename} de tamanho {file_size}...')
     file_size = int(file_size)
 
     save_path = os.path.join(save_directory, os.path.basename(filename))
@@ -141,6 +139,7 @@ def receive_file(sock, save_directory):
                 break
             file.write(chunk)
             received += len(chunk)
+    print(f'arquivo salvo.\n')
 
 
 if __name__ == "__main__":
