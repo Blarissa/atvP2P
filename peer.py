@@ -9,11 +9,10 @@ SERVER_PORT = 12000
 
 PEER_PORT = 12001
 
-arquivos = []
-diretorio = './data'
+DATA_DIR = './data'
 
-if not os.path.exists(diretorio):
-    os.makedirs(diretorio)                
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)                
 
 stop_event = threading.Event()
 
@@ -36,6 +35,7 @@ def register_file(client_socket):
         print(f'\nArquivo {arquivo} registrado.')
 
 def list_files(client_socket):
+    arquivos = []
     arquivos = json.loads(client_socket.recv(1024).decode())
     print(f'\nArquivos: {arquivos}')
 
@@ -50,8 +50,7 @@ def download_file(client_socket):
         leechSocket = create_and_connect(answer,PEER_PORT) # establish TCP connection with peer
         try:
             leechSocket.send(json.dumps(nome_arquivo).encode())
-            save_directory = 'data/'  # Directory to save the received file
-            receive_file(leechSocket, save_directory)
+            receive_file(leechSocket, DATA_DIR)
         except Exception as e:
             print(f'Error: {e}')
         finally:
@@ -105,41 +104,35 @@ def get_ip():
 
 def peer_seeding():
     peerSocket = socket(AF_INET,SOCK_STREAM) # welcoming socket
+    peerSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     peerPort = 12001
     peerSocket.bind((get_ip(),peerPort))
-    print(f'{get_ip()} is ready to receive')
     while not stop_event.is_set():
         peerSocket.listen(5) # pode ter até 5 conexões pendentes
         peerConnectionSocket, addr = peerSocket.accept()
         nome_arquivo = peerConnectionSocket.recv(1024).decode()
         nome_arquivo = nome_arquivo.strip('"')
-        print(f'peer {addr} quer {nome_arquivo}')
-        filepath = os.path.join('data', nome_arquivo)
+        print(f'peer {addr} quer {nome_arquivo}\nenviando...\n')
+        filepath = os.path.join(DATA_DIR, nome_arquivo)
         send_file(peerConnectionSocket,filepath)
 
 def send_file(sock, filename):
-    # Get the size of the file
     file_size = os.path.getsize(filename)
     
-    # Send the file name and size
     sock.sendall(f"{filename}|{file_size}".encode())
 
-    # Open the file in binary mode and send it in chunks
     with open(filename, "rb") as file:
         while chunk := file.read(1024):
             sock.sendall(chunk)
 
 def receive_file(sock, save_directory):
-    # Receive the file name and size
     file_info = sock.recv(1024).decode()
-    print(file_info)
     filename, file_size = file_info.split('|')
+    print(f'salvando {filename} de tamanho {file_size}...\n')
     file_size = int(file_size)
 
-    # Save the file in the specified directory
     save_path = os.path.join(save_directory, os.path.basename(filename))
 
-    # Receive the file in chunks
     with open(save_path, "wb") as file:
         received = 0
         while received < file_size:
