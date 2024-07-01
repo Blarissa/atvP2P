@@ -5,7 +5,7 @@ tracking = {} # dicionário de peers(keys) e seus arquivos(values)
 
 serverPort = 12000
 serverSocket = socket(AF_INET,SOCK_STREAM) # welcoming socket
-serverSocket.bind(('192.168.100.10',serverPort))
+serverSocket.bind(('192.168.100.3',serverPort))
 print('The server is ready to receive')
 
 while True:

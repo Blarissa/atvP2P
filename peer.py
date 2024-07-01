@@ -4,11 +4,10 @@ import json
 import threading
 import os
 
-SERVER_NAME = '192.168.100.10'
+SERVER_NAME = '192.168.100.3'
 SERVER_PORT = 12000
 
 PEER_PORT = 12001
-PEER_NAME = '192.168.100.10'
 
 arquivos = []
 diretorio = './data'
@@ -52,7 +51,7 @@ def download_file(client_socket):
         try:
             leechSocket.send(json.dumps(nome_arquivo).encode())
             save_directory = 'data/'  # Directory to save the received file
-            receive_file(sock, save_directory)
+            receive_file(leechSocket, save_directory)
         except Exception as e:
             print(f'Error: {e}')
         finally:
@@ -114,7 +113,7 @@ def peer_seeding():
         peerConnectionSocket, addr = peerSocket.accept()
         nome_arquivo = peerConnectionSocket.recv(1024).decode()
         print(f'peer {addr} quer {nome_arquivo}')
-        filepath = 'data/'+nome_arquivo
+        filepath = os.path.join('data', nome_arquivo)
         send_file(peerConnectionSocket,filepath)
 
 def send_file(sock, filename):
