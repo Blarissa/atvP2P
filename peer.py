@@ -51,6 +51,8 @@ def download_file(client_socket):
         leechSocket = create_and_connect(answer,PEER_PORT) # establish TCP connection with peer
         try:
             leechSocket.send(json.dumps(nome_arquivo).encode())
+            save_directory = 'data/'  # Directory to save the received file
+            receive_file(sock, save_directory)
         except Exception as e:
             print(f'Error: {e}')
         finally:
@@ -109,12 +111,48 @@ def peer_seeding():
     print(f'{get_ip()} is ready to receive')
     while not stop_event.is_set():
         peerSocket.listen(5) # pode ter até 5 conexões pendentes
-        connectionSocket, addr = peerSocket.accept()
-        nome_arquivo = connectionSocket.recv(1024).decode()
-        print(nome_arquivo)
+        peerConnectionSocket, addr = peerSocket.accept()
+        nome_arquivo = peerConnectionSocket.recv(1024).decode()
+        print(f'peer {addr} quer {nome_arquivo}')
+        filepath = 'data/'+nome_arquivo
+        send_file(peerConnectionSocket,filepath)
+
+def send_file(sock, filename):
+    # Get the size of the file
+    file_size = os.path.getsize(filename)
+    
+    # Send the file name and size
+    sock.sendall(f"{filename}|{file_size}".encode())
+
+    # Open the file in binary mode and send it in chunks
+    with open(filename, "rb") as file:
+        while chunk := file.read(1024):
+            sock.sendall(chunk)
+
+def receive_file(sock, save_directory):
+    # Receive the file name and size
+    file_info = sock.recv(1024).decode()
+    print(file_info)
+    filename, file_size = file_info.split('|')
+    file_size = int(file_size)
+
+    # Save the file in the specified directory
+    save_path = os.path.join(save_directory, os.path.basename(filename))
+
+    # Receive the file in chunks
+    with open(save_path, "wb") as file:
+        received = 0
+        while received < file_size:
+            chunk = sock.recv(1024)
+            if not chunk:
+                break
+            file.write(chunk)
+            received += len(chunk)
+
 
 if __name__ == "__main__":
     thread = threading.Thread(target=peer_seeding, args=())
     thread.start()
     main()
     thread.join()
+    
