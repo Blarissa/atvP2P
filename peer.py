@@ -1,4 +1,3 @@
-#import socket
 from socket import *
 import json, threading, os
 
