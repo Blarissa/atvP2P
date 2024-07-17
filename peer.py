@@ -10,16 +10,12 @@ DATA_DIR = './data'
 
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)                
-    # Generate a random word
+
+def create_random_file():
     random_word = ''.join(random.choices(string.ascii_lowercase, k=8))
-
-    # Create the full file path with .txt extension
     file_path = os.path.join(DATA_DIR, f"{random_word}.txt")
-
-    # Create the file with the random word and .txt extension
     with open(file_path, 'w') as file:
         file.write(f"This is a file named {random_word}.txt")
-
     print(f"\nArquivo {random_word}.txt criado.", flush=True)
 
 stop_event = threading.Event()
@@ -74,7 +70,8 @@ def main():
         '\nc - Listar arquivos'
         '\nd - Baixar arquivo'
         '\ne - Sair da rede'
-        '\nf - Sair\n'
+        '\nf - Sair'
+        '\ng - Criar arquivo local aleatório\n'
     )
 
     while True:
@@ -97,6 +94,8 @@ def main():
                 leave_network()
             elif opcode == 'f':
                 stop_event.set()
+            elif opcode == 'g':
+                create_random_file()
                 break
             else:
                 print('\nOpção inválida.')
