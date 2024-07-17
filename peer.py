@@ -96,7 +96,6 @@ def main():
                 stop_event.set()
             elif opcode == 'g':
                 create_random_file()
-                break
             else:
                 print('\nOpção inválida.')
         except Exception as e:
