@@ -1,7 +1,7 @@
 from socket import *
-import json, threading, os
+import json, threading, os, random, string
 
-SERVER_NAME = '192.168.100.3'
+SERVER_NAME = '10.13.78.132'
 SERVER_PORT = 12000
 
 PEER_PORT = 12001
@@ -10,6 +10,17 @@ DATA_DIR = './data'
 
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)                
+    # Generate a random word
+    random_word = ''.join(random.choices(string.ascii_lowercase, k=8))
+
+    # Create the full file path with .txt extension
+    file_path = os.path.join(DATA_DIR, f"{random_word}.txt")
+
+    # Create the file with the random word and .txt extension
+    with open(file_path, 'w') as file:
+        file.write(f"This is a file named {random_word}.txt")
+
+    print(f"\nArquivo {random_word}.txt criado.", flush=True)
 
 stop_event = threading.Event()
 
